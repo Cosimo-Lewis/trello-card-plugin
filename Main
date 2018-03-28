@@ -1,0 +1,60 @@
+all_boards = client.list_boards()
+last_board = all_boards[-1]
+all_cards = last_board.all_cards()
+
+
+dates = []
+cards = []
+labels = []
+sorted_by_week = []
+
+
+for card in last_board.all_cards():
+    dates.append(datetime.fromtimestamp(int(card.id[0:8], 16)))
+    cards.append(card)
+    labels.append(card.labels)
+
+card_data = list(zip(dates, cards, labels))
+
+df = pd.DataFrame(data=card_data, columns=["Date", "Title", "Labels"])
+df = df.sort_values(by="Date")
+pd.set_option('display.max_rows', 1000)
+# print(df["Date"].dt.week)
+# df.groupby('Title').resample('W-Mon', on='Date')
+df = df.reset_index()
+start = 0
+
+print(len(df) - 1)
+
+while True:
+    if start <= len(df) - 2:
+        dates = [df["Date"].loc[start]]
+        titles = [df["Title"].loc[start]]
+        labels = [df["Labels"].loc[start]]
+        count = start + 1
+        while df["Date"].dt.week.loc[count] == df["Date"].dt.week.loc[start]:
+            if count <= len(df) - 2:
+                dates.append(df["Date"].loc[count])
+                titles.append(df["Title"].loc[count])
+                labels.append(df["Labels"].loc[count])
+                count = count + 1
+        start = count
+        print(start)
+        week_data = list(zip(dates, titles, labels))
+        dfw = pd.DataFrame(data=week_data, columns=["Date", "Title", "Labels"])
+        sorted_by_week.append(dfw)
+    else:
+        break
+
+
+print(sorted_by_week)
+
+
+
+
+""" Creates and reads from a .csv file in necessary
+df.to_csv('cardData.csv', index=False, header=False)
+Location = r"/Users/cosimolewis/Desktop/cardData.csv"
+df = pd.read_csv(Location, names=['Date', 'Title', 'Label'])
+df["Date"] = pd.to_datetime(df["Date"])
+"""
