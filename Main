@@ -1,3 +1,18 @@
+from trello import TrelloClient
+from datetime import datetime
+import requests
+# import numpy as np
+import pandas as pd
+from pandas import DataFrame, read_csv
+# import matplotlib.pyplot as plt
+
+client = TrelloClient(
+    api_key='',
+    api_secret='',
+    token='',
+    token_secret=''
+)
+
 all_boards = client.list_boards()
 last_board = all_boards[-1]
 all_cards = last_board.all_cards()
@@ -23,21 +38,53 @@ pd.set_option('display.max_rows', 1000)
 # df.groupby('Title').resample('W-Mon', on='Date')
 df = df.reset_index()
 start = 0
+print(df["Date"].dt.week.loc[start])
 
-print(len(df) - 1)
+length = len(df) - 1
 
-while True:
-    if start <= len(df) - 2:
+done = False
+while done == False:
+
+    if start <= length:
         dates = [df["Date"].loc[start]]
         titles = [df["Title"].loc[start]]
         labels = [df["Labels"].loc[start]]
-        count = start + 1
-        while df["Date"].dt.week.loc[count] == df["Date"].dt.week.loc[start]:
-            if count <= len(df) - 2:
-                dates.append(df["Date"].loc[count])
-                titles.append(df["Title"].loc[count])
-                labels.append(df["Labels"].loc[count])
-                count = count + 1
+        current_index = start + 1
+
+        if current_index <= length:
+
+            start_week = df["Date"].dt.week.loc[start]
+
+            while df["Date"].dt.week.loc[current_index] == start_week and current_index > length:
+                print(df["Date"].dt.week.loc[current_index], start_week)
+                dates.append(df["Date"].loc[current_index])
+                titles.append(df["Title"].loc[current_index])
+                labels.append(df["Labels"].loc[current_index])
+                current_index = current_index + 1
+
+        start = current_index
+        print(start)
+
+        week_data = list(zip(dates, titles, labels))
+        dfw = pd.DataFrame(data=week_data, columns=["Date", "Title", "Labels"])
+        sorted_by_week.append(dfw)
+        # print(sorted_by_week)
+
+    else:
+        done = True
+
+
+print(sorted_by_week)
+
+
+
+
+""" Creates and reads from a .csv file in necessary
+df.to_csv('cardData.csv', index=False, header=False)
+Location = r"/Users/cosimolewis/Desktop/cardData.csv"
+df = pd.read_csv(Location, names=['Date', 'Title', 'Label'])
+df["Date"] = pd.to_datetime(df["Date"])
+"""
         start = count
         print(start)
         week_data = list(zip(dates, titles, labels))
